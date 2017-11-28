@@ -1,6 +1,8 @@
 # Introduction
 
-The events app demonstrates Mutations, Queries and Subscriptions using AWS AppSync. The backend schema for the Events app could be configured by just one click on the AppSync console.
+This is a Starter application for using the Sample app in the AWS AppSync console when building your GraphQL API. The Sample app creates a GraphQL schema and provisions Amazon DynamoDB resources, then connects them appropriately with Resolvers. The application demonstrates GraphQL Mutations, Queries and Subscriptions using AWS AppSync. You can use this for learning purposes or adapt either the application or the GraphQL Schema to meet your needs.
+
+![HomeScreen](Media/HomeScreen.png)
 
 ## Features
 
@@ -18,11 +20,11 @@ The events app demonstrates Mutations, Queries and Subscriptions using AWS AppSy
 - Authorization
   - The app uses API Key as the authoriation mechanism
 
-## Setup
+## AWS Setup
 
-1. Please visit AWS AppSync console using the URL: <INSERT URL HERE>. 
+1. Please visit AWS AppSync console using the URL: http://console.aws.amazon.com/appsync/home
 
-2. Now, click on `Create API` and select the `Sample Schema` option and give it an API name of your choice. Click `Create`.
+2. Click on `Create API` and select the `Sample Schema` option and give it an API name of your choice. Click `Create`.
 
 3. Next, use the git clone command specified on the console to clone the sample app.
 
@@ -50,3 +52,6 @@ The events app demonstrates Mutations, Queries and Subscriptions using AWS AppSy
 
 - The `AddEventViewController` creates a new event using the details entered on screen. 
 
+![NewEvent](Media/NewEvent.png)
+
+![EventDetails](Media/EventDetails.png)
