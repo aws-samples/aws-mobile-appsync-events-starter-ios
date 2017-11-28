@@ -2,7 +2,7 @@
 
 This is a Starter application for using the Sample app in the AWS AppSync console when building your GraphQL API. The Sample app creates a GraphQL schema and provisions Amazon DynamoDB resources, then connects them appropriately with Resolvers. The application demonstrates GraphQL Mutations, Queries and Subscriptions using AWS AppSync. You can use this for learning purposes or adapt either the application or the GraphQL Schema to meet your needs.
 
-![HomeScreen](Media/HomeScreen.png =100x)
+![EventDetails](Media/EventDetails.png)
 
 ## Features
 
@@ -75,7 +75,3 @@ This will generate an updated `EventssAPI.swift` file with additional operations
 ### AddEventViewController (Mutation)
 
 - The `AddEventViewController` creates a new event using the details entered on screen. 
-
-![NewEvent](Media/NewEvent.png)
-
-![EventDetails](Media/EventDetails.png)
