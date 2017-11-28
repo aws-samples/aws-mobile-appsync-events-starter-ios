@@ -34,7 +34,7 @@ The events app demonstrates Mutations, Queries and Subscriptions using AWS AppSy
 
 ### EventsAPI.swift
 
-- The EventsAPI.swift file contains code generated through `aws-apollo-codegen` based on the schema. It requires you to define a .graphql file and the schema.json for your API. For this example they are in events.graphql and schema-events.json.
+- The EventsAPI.swift file contains code generated through `aws-appsync-codegen` based on the schema. It requires you to define a .graphql file and the schema.json for your API. For this example they are in events.graphql and schema-events.json.
 - To add new mutations, queries or subscriptions into your app, you could extend the events.graphql file to add additional operations.
 - Then run `aws-appsync-codegen generate events.graphql --schema schema-events.json --output EventsAPI.swift` to generate the updated `EventssAPI.swift` file with additional operations.
 
