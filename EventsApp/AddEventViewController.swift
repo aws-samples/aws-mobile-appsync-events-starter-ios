@@ -27,10 +27,18 @@ class AddEventViewController: UIViewController {
     }
     
     @IBAction func addNewPost(_ sender: Any) {
-        let nameText = nameInput.text ?? ""
-        let whenText = whenInput.text ?? ""
-        let whereText = whereInput.text ?? ""
-        let descriptionText = descriptionInput.text ?? ""
+        guard let nameText = nameInput.text, !nameText.isEmpty,
+            let whenText = whenInput.text, !whenText.isEmpty,
+            let whereText = whereInput.text, !whereText.isEmpty,
+            let descriptionText = descriptionInput.text, !descriptionText.isEmpty else {
+                // Server won't accept empty strings
+                let alertController = UIAlertController(title: "Error", message: "Missing values.", preferredStyle: .alert)
+                let okAction = UIAlertAction(title: "OK", style: .default)
+                alertController.addAction(okAction)
+                present(alertController, animated: true)
+
+                return
+        }
 
         // Create a GraphQL mutation
         let addEventMutation = AddEventMutation(name: nameText,
