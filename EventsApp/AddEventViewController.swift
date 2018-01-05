@@ -27,13 +27,12 @@ class AddEventViewController: UIViewController {
     }
     
     @IBAction func addNewPost(_ sender: Any) {
-        
-        let nameText = nameInput.text!
-        let whenText = whenInput.text!
-        let whereText = whereInput.text!
-        let descriptionText = descriptionInput.text!
-        
-            // Create a GraphQL mutation
+        let nameText = nameInput.text ?? ""
+        let whenText = whenInput.text ?? ""
+        let whereText = whereInput.text ?? ""
+        let descriptionText = descriptionInput.text ?? ""
+
+        // Create a GraphQL mutation
         let addEventMutation = AddEventMutation(name: nameText,
                                                 when: whenText,
                                                 where: whereText,
