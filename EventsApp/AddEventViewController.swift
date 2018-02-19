@@ -27,22 +27,29 @@ class AddEventViewController: UIViewController {
     }
     
     @IBAction func addNewPost(_ sender: Any) {
-        // Create a GraphQL mutation
-        let addEventMutation = AddEventMutation(name: nameInput.text!,
-                                                when: whenInput.text!,
-                                                where: whereInput.text!,
-                                                description: descriptionInput.text!)
+        
+        let nameText = nameInput.text!
+        let whenText = whenInput.text!
+        let whereText = whereInput.text!
+        let descriptionText = descriptionInput.text!
+        
+            // Create a GraphQL mutation
+        let addEventMutation = AddEventMutation(name: nameText,
+                                                when: whenText,
+                                                where: whereText,
+                                                description: descriptionText)
         
         appSyncClient?.perform(mutation: addEventMutation, optimisticUpdate: { (transaction) in
             do {
                 // Update our normalized local store immediately for a responsive UI.
                 try transaction?.update(query: ListEventsQuery()) { (data: inout ListEventsQuery.Data) in
-                    data.listEvents?.items?.append(ListEventsQuery.Data.ListEvent.Item(id: "-1",
-                                                                                       description: self.descriptionInput.text,
-                                                                                       name: self.nameInput.text,
-                                                                                       when: self.whenInput.text,
-                                                                                       where: self.whereInput.text,
-                                                                                       comments: nil))
+                    data.listEvents?.items?.append(
+                        ListEventsQuery.Data.ListEvent.Item(id: UUID().uuidString,
+                                                            description: descriptionText,
+                                                            name: nameText,
+                                                            when: whenText,
+                                                            where: whereText,
+                                                            comments: nil))
                     
                 }
             } catch {

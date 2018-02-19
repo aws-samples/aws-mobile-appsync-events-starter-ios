@@ -47,7 +47,7 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "New Comment", style: .plain, target: self, action: #selector(addComment))
         
-        fetchEvent()
+        fetchEventFromCache()
         
         startSubsForEvent()
     }
@@ -55,16 +55,15 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(true)
         print("Cancelling subscritption..")
-        //newCommentsSubscriptionWatcher?.cancel()
+        newCommentsSubscriptionWatcher?.cancel()
     }
-    
-    func fetchEvent() {
+
+    func fetchEventFromCache() {
         let eventQuery = GetEventQuery(id: self.event!.id)
-        appSyncClient?.fetch(query: eventQuery, cachePolicy: .returnCacheDataAndFetch, resultHandler: { (result, error) in
+        appSyncClient?.fetch(query: eventQuery, cachePolicy: .returnCacheDataDontFetch, resultHandler: { (result, error) in
             if let error = error {
                 print("Error fetching event \(error.localizedDescription)")
             } else if let result = result {
-                print("Fetched event details")
                 if let event = result.data?.getEvent?.fragments.event {
                     self.comments = event.comments?.items
                 }
@@ -77,18 +76,37 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         let subscriptionRequest = NewCommentOnEventSubscription(eventId: event!.id)
         do {
             newCommentsSubscriptionWatcher = try appSyncClient?.subscribe(subscription: subscriptionRequest, resultHandler: { (res, transaction, err) in
-                guard let eventId = self.event?.id else {
+                guard let _ = self.event?.id else {
                     return
                 }
                 do {
-                    try transaction?.update(query: GetEventQuery(id: eventId)) { (data: inout GetEventQuery.Data) in
-                        let content = res?.data?.subscribeToEventComments?.content
-                        let commentId = res?.data?.subscribeToEventComments?.commentId
-                        let createdAt = res?.data?.subscribeToEventComments?.createdAt
-                        let eventId = res?.data?.subscribeToEventComments?.eventId
-                        data.getEvent?.fragments.event.comments?.items?.append(Event.Comment.Item(eventId: eventId!, commentId:commentId!, content: content!, createdAt: createdAt!))
-                        self.fetchEvent()
-                    }
+                    let content = res?.data?.subscribeToEventComments?.content
+                    let commentId = res?.data?.subscribeToEventComments?.commentId
+                    let createdAt = res?.data?.subscribeToEventComments?.createdAt
+                    let eventId = res?.data?.subscribeToEventComments?.eventId
+                    
+                    // Initialize new comment
+                    let newCommentData = CommentOnEventMutation.Data.CommentOnEvent(eventId: eventId!, content: content!, commentId:commentId!, createdAt: createdAt!)
+                    let newCommentObject = Event.Comment.Item.init(snapshot: newCommentData.snapshot)
+                    
+                    // Update list of comments
+                    var previousComments = self.event?.comments
+                    previousComments?.items?.append(newCommentObject)
+                    
+                    // Create new event object with updated comments
+                    let comments = GetEventQuery.Data.GetEvent.Comment.init(snapshot: previousComments!.snapshot)
+                    let eventData = GetEventQuery.Data.GetEvent(id: eventId!,
+                                                                description: self.event?.description,
+                                                                name: self.event?.name,
+                                                                when: self.event?.when,
+                                                                where: self.event?.where,
+                                                                comments: comments)
+                    
+                    // Write new event object to the store
+                    try transaction?.write(object: eventData, withKey: eventId!)
+                    
+                    // reload data from cache
+                    self.fetchEventFromCache()
                 } catch {
                     print("error occurred while updating store. \(error)")
                 }
