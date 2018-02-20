@@ -32,6 +32,7 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         if let event = event {
             eventNameLabel.text = event.name
             whenLabel.text = event.when
@@ -47,7 +48,7 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "New Comment", style: .plain, target: self, action: #selector(addComment))
         
-        fetchEventFromCache()
+        fetchEventFromServer()
         
         startSubsForEvent()
     }
@@ -65,7 +66,24 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
                 print("Error fetching event \(error.localizedDescription)")
             } else if let result = result {
                 if let event = result.data?.getEvent?.fragments.event {
+                    // update comments and event object
                     self.comments = event.comments?.items
+                    self.event = event
+                }
+            }
+        })
+    }
+    
+    func fetchEventFromServer() {
+        let eventQuery = GetEventQuery(id: self.event!.id)
+        appSyncClient?.fetch(query: eventQuery, cachePolicy: .fetchIgnoringCacheData, resultHandler: { (result, error) in
+            if let error = error {
+                print("Error fetching event \(error.localizedDescription)")
+            } else if let result = result {
+                if let event = result.data?.getEvent?.fragments.event {
+                    // update comments and event object
+                    self.comments = event.comments?.items
+                    self.event = event
                 }
             }
         })
@@ -74,12 +92,14 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
     func startSubsForEvent() {
         
         let subscriptionRequest = NewCommentOnEventSubscription(eventId: event!.id)
+        print("starting subscription")
         do {
             newCommentsSubscriptionWatcher = try appSyncClient?.subscribe(subscription: subscriptionRequest, resultHandler: { (res, transaction, err) in
                 guard let _ = self.event?.id else {
                     return
                 }
                 do {
+                    print("Received new comment!")
                     let content = res?.data?.subscribeToEventComments?.content
                     let commentId = res?.data?.subscribeToEventComments?.commentId
                     let createdAt = res?.data?.subscribeToEventComments?.createdAt
@@ -94,7 +114,14 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
                     previousComments?.items?.append(newCommentObject)
                     
                     // Create new event object with updated comments
-                    let comments = GetEventQuery.Data.GetEvent.Comment.init(snapshot: previousComments!.snapshot)
+                    var comments: GetEventQuery.Data.GetEvent.Comment?
+                    if let previousComments = previousComments {
+                        comments = GetEventQuery.Data.GetEvent.Comment.init(snapshot: previousComments.snapshot)
+                    } else {
+                        let commentItem = GetEventQuery.Data.GetEvent.Comment.Item.init(eventId: eventId!, commentId: commentId!, content: content!, createdAt: createdAt!)
+                        comments = GetEventQuery.Data.GetEvent.Comment.init(items: [commentItem])
+                    }
+                    
                     let eventData = GetEventQuery.Data.GetEvent(id: eventId!,
                                                                 description: self.event?.description,
                                                                 name: self.event?.name,
