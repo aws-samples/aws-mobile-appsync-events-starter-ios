@@ -20,6 +20,12 @@ This is a Starter application for using the Sample app in the AWS AppSync consol
 - Authorization
   - The app uses API Key as the authorization mechanism
 
+## Requirements
+
+* Xcode 9 or later
+* iOS 9 or later
+* CocoaPods
+
 ## AWS Setup
 
 1. Navigate to the AWS AppSync console using the URL: http://console.aws.amazon.com/appsync/home
