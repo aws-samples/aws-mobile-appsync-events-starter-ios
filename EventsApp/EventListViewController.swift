@@ -72,7 +72,7 @@ class EventListViewController: UIViewController, UITableViewDelegate, UITableVie
     
     @objc func addTapped() {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let controller = storyboard.instantiateViewController(withIdentifier: "NewPostViewController") as! AddEventViewController
+        let controller = storyboard.instantiateViewController(withIdentifier: "NewPostViewController")
         self.present(controller, animated: true, completion: nil)
         
     }
