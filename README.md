@@ -9,6 +9,7 @@ This is a Starter application for using the Sample app in the AWS AppSync consol
 - GraphQL Mutations
   - Create new events
   - Create comments on existing events
+  - Delete an event (swipe left on event)
 
 - GraphQL Queries
   - Get all events (w/ pagination support)
