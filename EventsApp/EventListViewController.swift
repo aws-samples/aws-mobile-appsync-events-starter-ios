@@ -97,10 +97,28 @@ class EventListViewController: UIViewController, UITableViewDelegate, UITableVie
         if (editingStyle == UITableViewCellEditingStyle.delete) {
             let id = eventList![indexPath.row]?.id
             let deleteEventMutation = DeleteEventMutation(id: id!)
-            appSyncClient?.perform(mutation: deleteEventMutation) { result, err in
-                self.eventList?.remove(at: indexPath.row)
+
+            appSyncClient?.perform(mutation: deleteEventMutation, optimisticUpdate: { (transaction) in
+                do {
+                    // Update our normalized local store immediately for a responsive UI.
+                    try transaction?.update(query: ListEventsQuery()) { (data: inout ListEventsQuery.Data) in
+                        // remove event from local cache.
+                        let newState = data.listEvents?.items?.filter({$0?.id != id })
+                        data.listEvents?.items = newState
+                    }
+                    // load events from cache once the transaction is completed.
+                    self.loadAllEventsFromCache()
+                } catch {
+                    print("Error removing the object from cache with optimistic response.")
+                }
+            }) { result, err in
+                if let result = result {
+                    print("Successful response for delete: \(result)")
+                } else if let error = err {
+                    print("Error response for delete: \(error)")
+                }
             }
-            self.tableView.reloadData()
+
         }
     }
     
