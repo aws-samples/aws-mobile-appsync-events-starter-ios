@@ -1,6 +1,6 @@
 # Introduction
 
-This is a Starter application for using the Sample app in the AWS AppSync console when building your GraphQL API. The Sample app creates a GraphQL schema and provisions Amazon DynamoDB resources, then connects them appropriately with Resolvers. The application demonstrates GraphQL Mutations, Queries and Subscriptions using AWS AppSync. You can use this for learning purposes or adapt either the application or the GraphQL Schema to meet your needs.
+This is a starter application for using the sample app in the AWS AppSync console when building your GraphQL API. The sample app creates a GraphQL schema and provisions Amazon DynamoDB resources, then connects them appropriately with Resolvers. The application demonstrates GraphQL Mutations, Queries and Subscriptions using AWS AppSync. You can use this for learning purposes or adapt either the application or the GraphQL Schema to meet your needs.
 
 ![EventDetails](Media/EventDetails.png)
 
@@ -69,7 +69,7 @@ Now open `EventsApp.xcworkspace`.
  aws-appsync-codegen generate events.graphql --schema schema-events.json --output EventsAPI.swift
  ```
  
-This will generate an updated `EventssAPI.swift` file with additional operations.
+This will generate an updated `EventsAPI.swift` file with additional operations.
 
 ### EventListViewController (Query)
 
