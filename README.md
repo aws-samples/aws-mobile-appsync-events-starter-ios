@@ -31,7 +31,7 @@ This is a starter application for using the sample app in the AWS AppSync consol
 
 1. Navigate to the AWS AppSync console using the URL: http://console.aws.amazon.com/appsync/home
 
-2. Click on `Create API` and select the `Sample Schema` option. Enter a API name of your choice. Click `Create`.
+2. Click on `Create API` and select the `Event App` under the `sample project` in the bottom pane, and select `Start`. Enter a API name of your choice. Click `Create`.
 
 ## iOS Setup
 
@@ -41,9 +41,9 @@ Clone this repository:
 git clone https://github.com/aws-samples/aws-mobile-appsync-events-starter-ios.git
 ```
 
-From the homepage of your GraphQL API (you can click the name you entered in the left hand navigation) wait until the progress bar at the top has completed deploying your resources. 
+Wait until the progress bar at the top has completed deploying your resources. Then from the integration page of your GraphQL API (you can click the name you entered in the left hand navigation). 
 
-On this same page, select `iOS` at the bottom to download your `AppSync.json` configuration file. In the sample app which you just downloaded, copy the `API URL` and `API Key` from this JSON file and paste them into the `Constants.swift` file.
+On this same page, select `iOS` at the bottom to download your `awsconfiguration.json` configuration file by clicking the **Download Config** button. Replace the `awsconfiguration.json` file in the root of your app with the file you just downloaded.
 
 To setup the dependencies in the app, navigate to the project you just cloned from a terminal and run: 
 
@@ -51,25 +51,13 @@ To setup the dependencies in the app, navigate to the project you just cloned fr
 pod install
 ``` 
 
-Now open `EventsApp.xcworkspace`.
+Now open `EventsApp.xcworkspace`, then build and run the app.
 
 ## Application Walkthrough
 
 ### EventsAPI.swift
 
-- The EventsAPI.swift file contains code generated through `aws-appsync-codegen` based on the GraphQL schema. It requires you to define a .graphql file and the schema.json for your API. For this example, they are in events.graphql and schema-events.json. If you update your schema in the future, you will find updated versions of these in the AWS AppSync console under the homepage for your GraphQL API when you click the `iOS` tab. 
-
-- To add new mutations, queries or subscriptions into your app, you could extend the events.graphql file to add additional operations.
-
-- To generate a new API definition from the GraphQL schema, run:
-
- ```
- npm install aws-appsync-codegen
-
- aws-appsync-codegen generate events.graphql --schema schema-events.json --output EventsAPI.swift
- ```
- 
-This will generate an updated `EventsAPI.swift` file with additional operations.
+- The EventsAPI.swift file contains code generated through `aws-appsync-codegen` based on the GraphQL schema. It requires you to define a .graphql file and the schema.json for your API. For this example, they are in events.graphql and schema-events.json. If you update your schema in the future, you should use the [AWS Amplify CLI](https://aws-amplify.github.io/) codegen feature to automatically download and update your queries, mutations, subscriptions and the schema. For a tutorial of this, [click here](https://github.com/aws-amplify/amplify-cli/blob/master/native_guide.md).
 
 ### EventListViewController (Query)
 
