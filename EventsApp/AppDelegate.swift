@@ -17,14 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         // You can chose your database location accessible by SDK
-        let databaseURL = URL(fileURLWithPath:NSTemporaryDirectory()).appendingPathComponent(database_name)
+        let databaseURL = URL(fileURLWithPath:NSTemporaryDirectory()).appendingPathComponent("events-app-db")
         
         do {
             // initialize the AppSync client configuration configuration
-            let appSyncConfig = try AWSAppSyncClientConfiguration(url: AppSyncEndpointURL,
-                                                                    serviceRegion: AppSyncRegion,
-                                                                    apiKeyAuthProvider: APIKeyAuthProvider(),
-                                                                    databaseURL:databaseURL)
+            let appSyncConfig = try AWSAppSyncClientConfiguration(appSyncClientInfo: AWSAppSyncClientInfo(),
+                                                                  databaseURL: databaseURL)
             // initialize app sync client
             appSyncClient = try AWSAppSyncClient(appSyncConfig: appSyncConfig)
             // set id as the cache key for objects
