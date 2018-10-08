@@ -70,3 +70,7 @@ Now open `EventsApp.xcworkspace`, then build and run the app.
 ### AddEventViewController (Mutation)
 
 - The `AddEventViewController` creates a new event using the details entered on screen. 
+
+## Getting Help
+
+We use [AppSync iOS SDK GitHub issues](https://github.com/awslabs/aws-mobile-appsync-sdk-ios/issues) for tracking questions, bugs, and feature requests.
