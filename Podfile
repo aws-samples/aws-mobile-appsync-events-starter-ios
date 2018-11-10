@@ -6,5 +6,5 @@ target 'EventsApp' do
   use_frameworks!
 
   # Pods for EventsApp
-  pod 'AWSAppSync', '~> 2.6.21'
+  pod 'AWSAppSync', '~> 2.6.24'
 end
