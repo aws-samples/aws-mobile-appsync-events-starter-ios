@@ -11,24 +11,30 @@ class CommentCell: UITableViewCell {
     @IBOutlet weak var commentContent: UILabel!
 }
 
-class EventDetailsViewController : UIViewController, UITableViewDelegate, UITableViewDataSource {
+class EventDetailsViewController : UIViewController {
+    
+    // MARK: - IBOutlets
+    
     @IBOutlet weak var eventNameLabel: UILabel!
     @IBOutlet weak var whenLabel: UILabel!
     @IBOutlet weak var whereLabel: UILabel!
     @IBOutlet weak var descriptionLabel: UILabel!
-    
     @IBOutlet weak var tableView: UITableView!
+
+    // MARK: - Variables
     
+    var event: Event?
+
     var appSyncClient: AWSAppSyncClient?
+    var newCommentsSubscriptionWatcher: AWSAppSyncSubscriptionWatcher<NewCommentOnEventSubscription>?
+
     var comments: [Event.Comment.Item?]? = [] {
         didSet {
             tableView.reloadData()
         }
     }
     
-    var newCommentsSubscriptionWatcher: AWSAppSyncSubscriptionWatcher<NewCommentOnEventSubscription>?
-    
-    var event: Event?
+    // MARK: - Controller delegates
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,6 +64,19 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         print("Cancelling subscritption..")
         newCommentsSubscriptionWatcher?.cancel()
     }
+    
+    // updating selected event data at list page after page closing
+    override func willMove(toParentViewController parent: UIViewController?) {
+        super.willMove(toParentViewController: parent)
+        
+        guard let controllersCount = self.navigationController?.viewControllers.count, controllersCount > 1 else { return }
+        
+        if let vc = self.navigationController?.viewControllers[controllersCount - 2] as? EventListViewController {
+            vc.eventList[vc.lastOpenedIndex]?.fragments.event = self.event!
+        }
+    }
+    
+    // MARK: - Queries
 
     func fetchEventFromCache() {
         let eventQuery = GetEventQuery(id: self.event!.id)
@@ -144,16 +163,7 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         }
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return comments?.count ?? 0
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath) as! CommentCell
-        cell.commentContent.text = comments![indexPath.row]!.content
-        return cell
-    }
+    // MARK: - Click handlers
     
     @objc func addComment() {
         let alertController = UIAlertController(title: "New Comment", message: "Type in your thoughts.", preferredStyle: .alert)
@@ -163,8 +173,9 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
             let mutation = CommentOnEventMutation(eventId: self.event!.id, content: comment!, createdAt: Date().description)
             
             self.appSyncClient?.perform(mutation: mutation)
+            
         }
-
+        
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in }
         alertController.addTextField { (textField) in
             textField.placeholder = "Type the comment here.."
@@ -174,5 +185,19 @@ class EventDetailsViewController : UIViewController, UITableViewDelegate, UITabl
         
         self.present(alertController, animated: true, completion: nil)
     }
+}
+
+// MARK: - Table view delegates
+
+extension EventDetailsViewController: UITableViewDataSource, UITableViewDelegate {
     
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return comments?.count ?? 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath) as! CommentCell
+        cell.commentContent.text = comments![indexPath.row]!.content
+        return cell
+    }
 }
