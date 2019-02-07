@@ -13,21 +13,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var appSyncClient: AWSAppSyncClient?
 
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        // You can chose your database location accessible by SDK
-        let databaseURL = URL(fileURLWithPath:NSTemporaryDirectory()).appendingPathComponent("events-app-db")
-        
+        // You can chose the directory in which AppSync stores its persistent cache databases:
+        //     let cacheConfiguration = AWSAppSyncCacheConfiguration(withRootDirectory: rootDirectoryURL)
+        // or use the default configuration to store the databases in the app's Cache directory:
+        //     let cacheConfiguration = AWSAppSyncCacheConfiguration()
+        // or use in-memory (rather than persistent) caching by not specifying a cache configuration:
+        //     let appSyncConfig = try AWSAppSyncClientConfiguration(appSyncServiceConfig: AWSAppSyncServiceConfig())
+        // or even specify individual caches. Passing `nil` to any of these will cause it to be in-memory:
+        //     let cacheConfiguration= AWSAppSyncCacheConfiguration(
+        //         // or nil to use in-memory cache
+        //         offlineMutations: pathToOfflineMutationDB,
+        //         queries: pathToQueriesDB,
+        //         subscriptionMetadataCache: pathToSubscriptionMetadataDB)
+
         do {
             // initialize the AppSync client configuration configuration
-            let appSyncConfig = try AWSAppSyncClientConfiguration(appSyncClientInfo: AWSAppSyncClientInfo(),
-                                                                  databaseURL: databaseURL)
+            let cacheConfiguration = try AWSAppSyncCacheConfiguration()
+            let appSyncConfig = try AWSAppSyncClientConfiguration(appSyncServiceConfig: AWSAppSyncServiceConfig(),
+                                                                  cacheConfiguration: cacheConfiguration)
             // initialize app sync client
             appSyncClient = try AWSAppSyncClient(appSyncConfig: appSyncConfig)
+
             // set id as the cache key for objects
             appSyncClient?.apolloClient?.cacheKeyForObject = { $0["id"] }
-            
+
+            print("AppSyncClient initialized with cacheConfiguration: \(cacheConfiguration)")
         } catch {
             print("Error initializing AppSync client. \(error)")
         }
