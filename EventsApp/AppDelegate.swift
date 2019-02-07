@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        // You can chose the directory in which AppSync stores its persistent cache databases:
+        // You can choose the directory in which AppSync stores its persistent cache databases:
         //     let cacheConfiguration = AWSAppSyncCacheConfiguration(withRootDirectory: rootDirectoryURL)
         // or use the default configuration to store the databases in the app's Cache directory:
         //     let cacheConfiguration = AWSAppSyncCacheConfiguration()
