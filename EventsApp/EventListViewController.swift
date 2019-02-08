@@ -11,7 +11,7 @@ class EventCell: UITableViewCell {
     @IBOutlet weak var whenLabel: UILabel!
     @IBOutlet weak var whereLabel: UILabel!
     
-    func updateValues(eventName: String, when:String, where: String) {
+    func updateValues(eventName: String?, when: String?, where: String?) {
         eventNameLabel.text = eventName
         whenLabel.text = when
         whereLabel.text = `where`
@@ -25,13 +25,13 @@ class EventListViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
 
     // MARK: - Variables
-    
+
     var appSyncClient: AWSAppSyncClient?
-    
+
     var nextToken: String?
     var fixedLimit: Int = 20 // predefined pagination size
     
-    var isListBusy: Bool = false
+    var isLoadInProgress: Bool = false
     var needUpdateList: Bool = false
     var lastOpenedIndex: Int = -1
 
@@ -39,16 +39,16 @@ class EventListViewController: UIViewController {
     
     lazy var refreshControl: UIRefreshControl = {
         let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action:
-            #selector(handleRefresh(_:)),
+        refreshControl.addTarget(self,
+                                 action: #selector(handleRefresh(_:)),
                                  for: .valueChanged)
         
         return refreshControl
     }()
     
     @objc func handleRefresh(_ refreshControl: UIRefreshControl) {
-        self.nextToken = nil
-        self.loadAllEventsFromServer()
+        nextToken = nil
+        fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
     }
     
     // MARK: - Controller delegates
@@ -57,10 +57,10 @@ class EventListViewController: UIViewController {
         super.viewWillAppear(animated)
         
         // update list only if data source is changed programmatically
-        if self.needUpdateList {
-            self.needUpdateList = false
-            self.nextToken = nil
-            self.loadAllEventsFromCache()
+        if needUpdateList {
+            needUpdateList = false
+            nextToken = nil
+            fetchAllEventsUsingCachePolicy(.returnCacheDataAndFetch)
         }
     }
 
@@ -68,86 +68,58 @@ class EventListViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         self.automaticallyAdjustsScrollViewInsets = false
-        
+
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         appSyncClient = appDelegate.appSyncClient
+
+        tableView.dataSource = self
+        tableView.delegate = self
+
+        tableView.refreshControl = refreshControl
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add",
+                                                            style: .plain,
+                                                            target: self,
+                                                            action: #selector(addTapped))
         
-        self.tableView.dataSource = self
-        self.tableView.delegate = self
-        
-        self.tableView.addSubview(refreshControl)
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Add", style: .plain, target: self, action: #selector(addTapped))
-        
-        loadAllEventsFromCache()
+        fetchAllEventsUsingCachePolicy(.returnCacheDataAndFetch)
     }
     
     // MARK: - Queries
-    
-    func loadAllEventsFromServer() {
-        if isListBusy {
+
+    func fetchAllEventsUsingCachePolicy(_ cachePolicy: CachePolicy) {
+        if isLoadInProgress {
             return
         }
-        
-        isListBusy = true
-        
-        self.refreshControl.beginRefreshing()
 
-        let listQuery = ListEventsQuery(limit: self.fixedLimit, nextToken: self.nextToken)
-        
-        appSyncClient?.fetch(query: listQuery, cachePolicy: .fetchIgnoringCacheData) { (result, error) in
+        isLoadInProgress = true
+
+        refreshControl.beginRefreshing()
+
+        let listQuery = ListEventsQuery(limit: fixedLimit, nextToken: nextToken)
+
+        appSyncClient?.fetch(query: listQuery, cachePolicy: cachePolicy) { (result, error) in
             self.refreshControl.endRefreshing()
-            
-            if error != nil {
-                print(error?.localizedDescription ?? "")
+
+            if let error = error {
+                print("Error fetching data: \(error)")
                 return
             }
-            
-            // fresh load check
-            if self.nextToken == nil {
+
+            // Remove existing records if we're either loading from cache, or loading fresh (e.g., from a refresh)
+            if self.nextToken == nil && cachePolicy == .returnCacheDataAndFetch {
                 self.eventList.removeAll()
             }
-            
+
             self.eventList.append(contentsOf: result?.data?.listEvents?.items ?? [])
             self.tableView.reloadData()
+
             self.nextToken = result?.data?.listEvents?.nextToken
-            
-            // delayed relaising list due to update time for tableview
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                self.isListBusy = false
-            })
+
+            self.isLoadInProgress = false
         }
     }
-    
-    func loadAllEventsFromCache() {
-        if isListBusy {
-            return
-        }
-        
-        isListBusy = true
-        
-        let listQuery = ListEventsQuery(limit: self.fixedLimit, nextToken: self.nextToken)
-        
-        appSyncClient?.fetch(query: listQuery, cachePolicy: .returnCacheDataAndFetch)  { (result, error) in
-            if error != nil {
-                print(error?.localizedDescription ?? "")
-                return
-            }
-            
-            // fresh load always
-            self.eventList.removeAll()
-            
-            self.eventList.append(contentsOf: result?.data?.listEvents?.items ?? [])
-            self.tableView.reloadData()
-            self.nextToken = result?.data?.listEvents?.nextToken
-            
-            // delayed relaising list due to update time for tableview
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                self.isListBusy = false
-            })
-        }
-    }
-    
+
     // MARK: - Click handlers
     
     @objc func addTapped() {
@@ -167,10 +139,11 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
         let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as! EventCell
-        let event = eventList[indexPath.row]!
-        cell.updateValues(eventName: event.name!, when: event.when!, where: event.where!)
+        guard let event = eventList[indexPath.row] else {
+            return cell
+        }
+        cell.updateValues(eventName: event.name, when: event.when, where: event.where)
         return cell
     }
     
@@ -180,11 +153,13 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     // editing action
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if (editingStyle == UITableViewCellEditingStyle.delete) {
-            let id = eventList[indexPath.row]?.id
-            let deleteEventMutation = DeleteEventMutation(id: id!)
-            
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == UITableViewCell.EditingStyle.delete) {
+            guard let id = eventList[indexPath.row]?.id else {
+                return
+            }
+            let deleteEventMutation = DeleteEventMutation(id: id)
+
             appSyncClient?.perform(mutation: deleteEventMutation, optimisticUpdate: { (transaction) in
                 do {
                     // Update our normalized local store immediately for a responsive UI.
@@ -196,14 +171,14 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
                 } catch {
                     print("Error removing the object from cache with optimistic response.")
                 }
-            }) { result, err in
+            }) { result, error in
                 if let result = result {
                     print("Successful response for delete: \(result)")
                     
                     // refresh updated list in main thread
                     self.eventList.remove(at: indexPath.row)
                     self.tableView.reloadData()
-                } else if let error = err {
+                } else if let error = error {
                     print("Error response for delete: \(error)")
                 }
             }
@@ -214,7 +189,9 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.lastOpenedIndex = indexPath.row
         
-        let event = eventList[self.lastOpenedIndex]!
+        guard let event = eventList[indexPath.row] else {
+            return
+        }
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let controller = storyboard.instantiateViewController(withIdentifier: "EventDetailsViewController") as! EventDetailsViewController
         controller.event = event.fragments.event
@@ -223,9 +200,10 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     
     // pagination
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if !self.isListBusy && indexPath.row > eventList.count - 2 && self.nextToken?.count ?? 0 > 0 {
-            self.loadAllEventsFromServer()
+        if !isLoadInProgress &&
+            indexPath.row > eventList.count - 2 &&
+            self.nextToken?.count ?? 0 > 0 {
+            fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
         }
     }
 }
-

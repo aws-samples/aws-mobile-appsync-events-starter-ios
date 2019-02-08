@@ -19,23 +19,29 @@ class EventDetailsViewController : UIViewController {
     @IBOutlet weak var whenLabel: UILabel!
     @IBOutlet weak var whereLabel: UILabel!
     @IBOutlet weak var descriptionLabel: UILabel!
+
     @IBOutlet weak var tableView: UITableView!
 
     // MARK: - Variables
     
+    // The event to display
     var event: Event?
 
+    // The app's AppSyncClient, used to fetch initial comment data and subscribe to new comments
     var appSyncClient: AWSAppSyncClient?
+
+    // This subscription watcher is retained for the life of the ViewController. Releasing a subscription watcher means
+    // that its handler will no longer be invoked when AppSync detects a change
     var newCommentsSubscriptionWatcher: AWSAppSyncSubscriptionWatcher<NewCommentOnEventSubscription>?
 
-    var comments: [Event.Comment.Item?]? = [] {
+    var comments: [Event.Comment.Item?] = [] {
         didSet {
             tableView.reloadData()
         }
     }
-    
+
     // MARK: - Controller delegates
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -44,8 +50,9 @@ class EventDetailsViewController : UIViewController {
             whenLabel.text = event.when
             whereLabel.text = event.where
             descriptionLabel.text = event.description
-            comments = event.comments?.items
+            comments = event.comments?.items ?? []
         }
+
         self.tableView.delegate = self
         self.tableView.dataSource = self
         
@@ -55,19 +62,23 @@ class EventDetailsViewController : UIViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "New Comment", style: .plain, target: self, action: #selector(addComment))
         
         fetchEventFromServer()
-        
-        startSubsForEvent()
+
+        do {
+            try startSubscriptionForEvent()
+        } catch {
+            print("Error subscribing to events: \(error)")
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(true)
-        print("Cancelling subscritption..")
+        print("Cancelling subscription")
         newCommentsSubscriptionWatcher?.cancel()
     }
     
-    // updating selected event data at list page after page closing
-    override func willMove(toParentViewController parent: UIViewController?) {
-        super.willMove(toParentViewController: parent)
+    // Update selected event data in the list page
+    override func willMove(toParent parent: UIViewController?) {
+        super.willMove(toParent: parent)
         
         guard let controllersCount = self.navigationController?.viewControllers.count, controllersCount > 1 else { return }
         
@@ -79,108 +90,159 @@ class EventDetailsViewController : UIViewController {
     // MARK: - Queries
 
     func fetchEventFromCache() {
-        let eventQuery = GetEventQuery(id: self.event!.id)
-        appSyncClient?.fetch(query: eventQuery, cachePolicy: .returnCacheDataDontFetch, resultHandler: { (result, error) in
-            if let error = error {
-                print("Error fetching event \(error.localizedDescription)")
-            } else if let result = result {
-                if let event = result.data?.getEvent?.fragments.event {
-                    // update comments and event object
-                    self.comments = event.comments?.items
-                    self.event = event
-                }
-            }
-        })
+        doFetchWithCachePolicy(.returnCacheDataDontFetch)
     }
     
     func fetchEventFromServer() {
-        let eventQuery = GetEventQuery(id: self.event!.id)
-        appSyncClient?.fetch(query: eventQuery, cachePolicy: .fetchIgnoringCacheData, resultHandler: { (result, error) in
-            if let error = error {
-                print("Error fetching event \(error.localizedDescription)")
-            } else if let result = result {
-                if let event = result.data?.getEvent?.fragments.event {
-                    // update comments and event object
-                    self.comments = event.comments?.items
-                    self.event = event
-                }
+        doFetchWithCachePolicy(.fetchIgnoringCacheData)
+    }
+
+    func doFetchWithCachePolicy(_ cachePolicy: CachePolicy) {
+        guard let event = event else {
+            print("Event is nil, not fetching")
+            return
+        }
+
+        let eventQuery = GetEventQuery(id: event.id)
+
+        // Fetch defaults to invoking callbacks on the main queue, so the assignment to `self.comments` below is safe
+        appSyncClient?.fetch(query: eventQuery, cachePolicy: cachePolicy) { (result, error) in
+            guard error == nil else {
+                print("Error fetching event: \(error!.localizedDescription)")
+                return
             }
-        })
-    }
-    
-    func startSubsForEvent() {
-        
-        let subscriptionRequest = NewCommentOnEventSubscription(eventId: event!.id)
-        print("starting subscription")
-        do {
-            newCommentsSubscriptionWatcher = try appSyncClient?.subscribe(subscription: subscriptionRequest, resultHandler: { (res, transaction, err) in
-                guard let _ = self.event?.id else {
-                    return
-                }
-                do {
-                    print("Received new comment!")
-                    let content = res?.data?.subscribeToEventComments?.content
-                    let commentId = res?.data?.subscribeToEventComments?.commentId
-                    let createdAt = res?.data?.subscribeToEventComments?.createdAt
-                    let eventId = res?.data?.subscribeToEventComments?.eventId
-                    
-                    // Initialize new comment
-                    let newCommentData = CommentOnEventMutation.Data.CommentOnEvent(eventId: eventId!, content: content!, commentId:commentId!, createdAt: createdAt!)
-                    let newCommentObject = Event.Comment.Item.init(snapshot: newCommentData.snapshot)
-                    
-                    // Update list of comments
-                    var previousComments = self.event?.comments
-                    previousComments?.items?.append(newCommentObject)
-                    
-                    // Create new event object with updated comments
-                    var comments: GetEventQuery.Data.GetEvent.Comment?
-                    if let previousComments = previousComments {
-                        comments = GetEventQuery.Data.GetEvent.Comment.init(snapshot: previousComments.snapshot)
-                    } else {
-                        let commentItem = GetEventQuery.Data.GetEvent.Comment.Item.init(eventId: eventId!, commentId: commentId!, content: content!, createdAt: createdAt!)
-                        comments = GetEventQuery.Data.GetEvent.Comment.init(items: [commentItem])
-                    }
-                    
-                    let eventData = GetEventQuery.Data.GetEvent(id: eventId!,
-                                                                description: self.event?.description,
-                                                                name: self.event?.name,
-                                                                when: self.event?.when,
-                                                                where: self.event?.where,
-                                                                comments: comments)
-                    
-                    // Write new event object to the store
-                    try transaction?.write(object: eventData, withKey: eventId!)
-                    
-                    // reload data from cache
-                    self.fetchEventFromCache()
-                } catch {
-                    print("error occurred while updating store. \(error)")
-                }
-            })
-        }
-        catch {
-            print("Failed subscribing to new comments on this post. \(error)")
+
+            guard let event = result?.data?.getEvent?.fragments.event else {
+                print("Event data nil fetching")
+                return
+            }
+            self.event = event
+
+            guard let comments = event.comments?.items else {
+                print("Comments nil fetching event")
+                return
+            }
+            self.comments = comments
         }
     }
-    
+
+    func startSubscriptionForEvent() throws {
+        guard let eventId = event?.id else {
+            print("Event is nil, not starting subscription")
+            return
+        }
+        print("Starting subscription for event: \(eventId)")
+
+        let subscriptionRequest = NewCommentOnEventSubscription(eventId: eventId)
+
+        // When we receive a new comment via subscription, AppSync will automatically cache the new comment object
+        // itself (assuming it is valid). However, we must manually update the relationship between the parent event
+        // and the new comment. Rather than re-query the service for the updated object, we will update the cache
+        // locally with the incoming data.
+        newCommentsSubscriptionWatcher = try appSyncClient?.subscribe(subscription: subscriptionRequest) { [weak self] (result, transaction, error) in
+            print("Received comment subscription callback on event \(eventId)")
+
+            guard let self = self else {
+                print("EventDetails view controller has been deallocated since subscription was started, aborting")
+                return
+            }
+
+            guard let event = self.event else {
+                print("Event has been deallocated since the subscription was started, aborting")
+                return
+            }
+
+            guard error == nil else {
+                print("Error in comment subscription for event \(event.id): \(error!.localizedDescription)")
+                return
+            }
+
+            guard let result = result else {
+                print("Result unexpectedly nil in comment subscription for event \(event.id)")
+                return
+            }
+
+            guard let graphQLResponseData = result.data?.subscribeToEventComments else {
+                print("GraphQL response data unexpectedly nil in comment subscription for event \(event.id)")
+                return
+            }
+
+            print("Received new comment on event \(event.id)")
+
+            let content = graphQLResponseData.content
+            let commentId = graphQLResponseData.commentId
+            let createdAt = graphQLResponseData.createdAt
+            let eventId = graphQLResponseData.eventId
+
+            // This will be the new object to add to the local cache for the event->comment relationship
+            var comments: GetEventQuery.Data.GetEvent.Comment?
+            if var previousComments = event.comments {
+                let newCommentData = CommentOnEventMutation.Data.CommentOnEvent(
+                    eventId: eventId,
+                    content: content,
+                    commentId: commentId,
+                    createdAt: createdAt)
+                let newCommentObject = Event.Comment.Item(snapshot: newCommentData.snapshot)
+                previousComments.items?.append(newCommentObject)
+                comments = GetEventQuery.Data.GetEvent.Comment(snapshot: previousComments.snapshot)
+            } else {
+                // Note that this is the same data as, but a different structure than, the `newCommentObject` above
+                let commentItem = GetEventQuery.Data.GetEvent.Comment.Item(
+                    eventId: eventId,
+                    commentId: commentId,
+                    content: content,
+                    createdAt: createdAt)
+                comments = GetEventQuery.Data.GetEvent.Comment(items: [commentItem])
+            }
+
+            let eventData = GetEventQuery.Data.GetEvent(id: eventId,
+                                                        description: event.description,
+                                                        name: event.name,
+                                                        when: event.when,
+                                                        where: event.where,
+                                                        comments: comments)
+
+            do {
+                // Write new event object to the store
+                try transaction?.write(object: eventData, withKey: eventId)
+
+                // reload data from cache, which will also reload the table view
+                self.fetchEventFromCache()
+            } catch {
+                print("Error occurred while updating store during comment subscription: \(error)")
+            }
+
+        }
+    }
+
     // MARK: - Click handlers
-    
+
     @objc func addComment() {
         let alertController = UIAlertController(title: "New Comment", message: "Type in your thoughts.", preferredStyle: .alert)
         
-        let confirmAction = UIAlertAction(title: "Enter", style: .default) { (_) in
-            let comment = alertController.textFields?[0].text
-            let mutation = CommentOnEventMutation(eventId: self.event!.id, content: comment!, createdAt: Date().description)
+        let confirmAction = UIAlertAction(title: "Enter", style: .default) { _ in
+            guard let event = self.event else {
+                return
+            }
+
+            guard let comment = alertController.textFields?[0].text, !comment.isEmpty else {
+                return
+            }
+
+            let mutation = CommentOnEventMutation(eventId: event.id, content: comment, createdAt: Date().description)
             
             self.appSyncClient?.perform(mutation: mutation)
             
         }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in }
+
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in }
+
         alertController.addTextField { (textField) in
-            textField.placeholder = "Type the comment here.."
+            textField.placeholder = "Type the comment here..."
         }
+
         alertController.addAction(confirmAction)
+
         alertController.addAction(cancelAction)
         
         self.present(alertController, animated: true, completion: nil)
@@ -192,12 +254,16 @@ class EventDetailsViewController : UIViewController {
 extension EventDetailsViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return comments?.count ?? 0
+        return comments.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath) as! CommentCell
-        cell.commentContent.text = comments![indexPath.row]!.content
+        guard let content = comments[indexPath.row]?.content else {
+            print("No comment at indexPath \(indexPath)")
+            return cell
+        }
+        cell.commentContent.text = content
         return cell
     }
 }

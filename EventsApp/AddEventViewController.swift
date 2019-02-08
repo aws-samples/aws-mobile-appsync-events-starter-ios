@@ -15,17 +15,17 @@ class AddEventViewController: UIViewController {
     @IBOutlet weak var descriptionInput: UITextField!
     @IBOutlet weak var whenInput: UITextField!
     @IBOutlet weak var whereInput: UITextField!
-    
+
     // MARK: - Variables
     
     var appSyncClient: AWSAppSyncClient?
-    
+
     // MARK: - Controller delegates
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appSyncClient = appDelegate.appSyncClient!
+        appSyncClient = appDelegate.appSyncClient
     }
 
     override func didReceiveMemoryWarning() {
@@ -49,42 +49,78 @@ class AddEventViewController: UIViewController {
                 return
         }
 
-        // Create a GraphQL mutation
-        let id = UUID().uuidString
+        // We set up a temporary ID so we can reconcile the server-provided ID when `addEventMutation` returns
+        let temporaryLocalID = "TEMP-\(UUID().uuidString)"
+
         let addEventMutation = AddEventMutation(name: nameText,
                                                 when: whenText,
                                                 where: whereText,
                                                 description: descriptionText)
-        
-        appSyncClient?.perform(mutation: addEventMutation, optimisticUpdate: { (transaction) in
+
+        appSyncClient?.perform(mutation: addEventMutation, optimisticUpdate: { transaction in
             do {
                 // Update our normalized local store immediately for a responsive UI.
                 try transaction?.update(query: ListEventsQuery()) { (data: inout ListEventsQuery.Data) in
-                    data.listEvents?.items?.append(
-                        ListEventsQuery.Data.ListEvent.Item(id: id,
-                                                            description: descriptionText,
-                                                            name: nameText,
-                                                            when: whenText,
-                                                            where: whereText,
-                                                            comments: nil))
-                    
+                    let localItem = ListEventsQuery.Data.ListEvent.Item(id: temporaryLocalID,
+                                                                        description: descriptionText,
+                                                                        name: nameText,
+                                                                        when: whenText,
+                                                                        where: whereText,
+                                                                        comments: nil)
+
+                    data.listEvents?.items?.append(localItem)
                 }
             } catch {
-                print("Error updating the cache with optimistic response.")
+                print("Error updating the cache with optimistic response: \(error)")
             }
         }) { (result, error) in
-            if let error = error as? AWSAppSyncClientError {
-                print("Error occurred: \(error.localizedDescription )")
+            defer {
+                self.navigationController?.popViewController(animated: true)
+
+                if let vc = self.navigationController?.viewControllers.last as? EventListViewController {
+                    vc.needUpdateList = true
+                }
+            }
+
+            guard error == nil else {
+                print("Error occurred posting a new item: \(error!.localizedDescription )")
                 return
             }
-            
-            self.navigationController?.popViewController(animated: true)
-            
-            if let vc = self.navigationController?.viewControllers.last as? EventListViewController {
-                vc.needUpdateList = true
+
+            guard let createEventResponse = result?.data?.createEvent else {
+                print("Result unexpectedly nil posting a new item")
+                return
+            }
+
+            print("New item returned from server and stored in local cache, server-provided id: \(createEventResponse.id)")
+
+            let newItem = ListEventsQuery.Data.ListEvent.Item(
+                id: createEventResponse.id,
+                description: createEventResponse.description,
+                name: createEventResponse.name,
+                when: createEventResponse.when,
+                where: createEventResponse.where,
+                // For simplicity, we're assuming newly-created events have no comments
+                comments: nil
+            )
+
+            // Update the local cache for the "list events" operation
+            _ = self.appSyncClient?.store?.withinReadWriteTransaction() { transaction in
+                try transaction.update(query: ListEventsQuery()) { (data: inout ListEventsQuery.Data) in
+                    guard data.listEvents != nil else {
+                        print("Local cache unexpectedly has no results for ListEventsQuery")
+                        return
+                    }
+
+                    var updatedItems = data.listEvents?.items?.filter({ $0?.id != temporaryLocalID })
+                    updatedItems?.append(newItem)
+
+                    // `data` is an inout variable inside a read/write transaction. Setting `items` here will cause the
+                    // local cache to be updated
+                    data.listEvents?.items = updatedItems
+                }
             }
         }
-        self.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func onCancel(_ sender: Any) {
