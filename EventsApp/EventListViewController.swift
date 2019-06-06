@@ -111,7 +111,16 @@ class EventListViewController: UIViewController {
                 self.eventList.removeAll()
             }
 
-            self.eventList.append(contentsOf: result?.data?.listEvents?.items ?? [])
+            let existingKeys = Set(self.eventList.compactMap { $0?.id })
+            let newItems = result?
+                .data?
+                .listEvents?
+                .items?
+                .compactMap { $0 }
+                .filter { !existingKeys.contains($0.id) }
+
+            self.eventList.append(contentsOf: newItems ?? [])
+
             self.tableView.reloadData()
 
             self.nextToken = result?.data?.listEvents?.nextToken

@@ -33,7 +33,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		170050FF21546E35008B16B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = SOURCE_ROOT; };
+		170050FF21546E35008B16B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = awsconfiguration.json; path = EventsApp/awsconfiguration.json; sourceTree = SOURCE_ROOT; };
 		171A410C1FC5649F0040C400 /* EventsAPI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsAPI.swift; sourceTree = "<group>"; };
 		17CBF3921FB4B2E00015BC6A /* EventsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		17CBF3951FB4B2E00015BC6A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -82,16 +82,14 @@
 		17CBF3941FB4B2E00015BC6A /* EventsApp */ = {
 			isa = PBXGroup;
 			children = (
-				170050FF21546E35008B16B6 /* awsconfiguration.json */,
-				17CBF3951FB4B2E00015BC6A /* AppDelegate.swift */,
-				17CBF3971FB4B2E00015BC6A /* EventListViewController.swift */,
 				17CBF3A71FB4B3A40015BC6A /* AddEventViewController.swift */,
-				17CBF3991FB4B2E00015BC6A /* Main.storyboard */,
-				17CBF39C1FB4B2E00015BC6A /* Assets.xcassets */,
-				17CBF39E1FB4B2E00015BC6A /* LaunchScreen.storyboard */,
-				17CBF3A11FB4B2E00015BC6A /* Info.plist */,
+				17CBF3951FB4B2E00015BC6A /* AppDelegate.swift */,
 				17E009061FC5EE8F005031DB /* EventDetails.swift */,
+				17CBF3971FB4B2E00015BC6A /* EventListViewController.swift */,
 				171A410C1FC5649F0040C400 /* EventsAPI.swift */,
+				17CBF39E1FB4B2E00015BC6A /* LaunchScreen.storyboard */,
+				17CBF3991FB4B2E00015BC6A /* Main.storyboard */,
+				FA89F9F922A9CA260037110D /* Resources */,
 			);
 			path = EventsApp;
 			sourceTree = "<group>";
@@ -102,6 +100,16 @@
 				49640E01CB7D0D9B4BABF41A /* Pods_EventsApp.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FA89F9F922A9CA260037110D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				170050FF21546E35008B16B6 /* awsconfiguration.json */,
+				17CBF39C1FB4B2E00015BC6A /* Assets.xcassets */,
+				17CBF3A11FB4B2E00015BC6A /* Info.plist */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		FF7E16345916727A7400C5E5 /* Pods */ = {
@@ -192,7 +200,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-EventsApp/Pods-EventsApp-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-EventsApp/Pods-EventsApp-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/AWSAppSync/AWSAppSync.framework",
 				"${BUILT_PRODUCTS_DIR}/AWSCore/AWSCore.framework",
 				"${BUILT_PRODUCTS_DIR}/ReachabilitySwift/Reachability.framework",
@@ -207,7 +215,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-EventsApp/Pods-EventsApp-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-EventsApp/Pods-EventsApp-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		ED059264170C7BF1D3ED2383 /* [CP] Check Pods Manifest.lock */ = {
