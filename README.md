@@ -23,7 +23,7 @@ This is a starter application for using the sample app in the AWS AppSync consol
 
 ## Requirements
 
-* Xcode 9 or later
+* Xcode 10 or later
 * iOS 9 or later
 * CocoaPods
 
@@ -49,7 +49,7 @@ To setup the dependencies in the app, navigate to the project you just cloned fr
 
 ```
 pod install
-``` 
+```
 
 Now open `EventsApp.xcworkspace`, then build and run the app.
 
