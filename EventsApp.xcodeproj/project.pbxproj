@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1700510021546E35008B16B6 /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 170050FF21546E35008B16B6 /* awsconfiguration.json */; };
 		171A410D1FC5649F0040C400 /* EventsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171A410C1FC5649F0040C400 /* EventsAPI.swift */; };
 		17CBF3961FB4B2E00015BC6A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17CBF3951FB4B2E00015BC6A /* AppDelegate.swift */; };
 		17CBF3981FB4B2E00015BC6A /* EventListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17CBF3971FB4B2E00015BC6A /* EventListViewController.swift */; };
@@ -17,6 +16,7 @@
 		17CBF3A81FB4B3A40015BC6A /* AddEventViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17CBF3A71FB4B3A40015BC6A /* AddEventViewController.swift */; };
 		17E009071FC5EE8F005031DB /* EventDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E009061FC5EE8F005031DB /* EventDetails.swift */; };
 		F60B72A3DBBCB5EE5348BAE8 /* Pods_EventsApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49640E01CB7D0D9B4BABF41A /* Pods_EventsApp.framework */; };
+		FA6C86CE235764C70023397A /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = FA6C86CD235764C70023397A /* awsconfiguration.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,7 +33,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		170050FF21546E35008B16B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = awsconfiguration.json; path = EventsApp/awsconfiguration.json; sourceTree = SOURCE_ROOT; };
 		171A410C1FC5649F0040C400 /* EventsAPI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsAPI.swift; sourceTree = "<group>"; };
 		17CBF3921FB4B2E00015BC6A /* EventsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		17CBF3951FB4B2E00015BC6A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -47,6 +46,7 @@
 		49640E01CB7D0D9B4BABF41A /* Pods_EventsApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_EventsApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5F38C6DD729BD9564F31608 /* Pods-EventsApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EventsApp.debug.xcconfig"; path = "Pods/Target Support Files/Pods-EventsApp/Pods-EventsApp.debug.xcconfig"; sourceTree = "<group>"; };
 		CC70F242478FEFDE57B38FAC /* Pods-EventsApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EventsApp.release.xcconfig"; path = "Pods/Target Support Files/Pods-EventsApp/Pods-EventsApp.release.xcconfig"; sourceTree = "<group>"; };
+		FA6C86CD235764C70023397A /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,7 +105,7 @@
 		FA89F9F922A9CA260037110D /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				170050FF21546E35008B16B6 /* awsconfiguration.json */,
+				FA6C86CD235764C70023397A /* awsconfiguration.json */,
 				17CBF39C1FB4B2E00015BC6A /* Assets.xcassets */,
 				17CBF3A11FB4B2E00015BC6A /* Info.plist */,
 			);
@@ -129,6 +129,8 @@
 			buildConfigurationList = 17CBF3A41FB4B2E00015BC6A /* Build configuration list for PBXNativeTarget "EventsApp" */;
 			buildPhases = (
 				ED059264170C7BF1D3ED2383 /* [CP] Check Pods Manifest.lock */,
+				FA6C86D02357672D0023397A /* SwiftFormat */,
+				FA6C86CF235766D50023397A /* SwiftLint */,
 				17CBF38E1FB4B2E00015BC6A /* Sources */,
 				17CBF38F1FB4B2E00015BC6A /* Frameworks */,
 				17CBF3901FB4B2E00015BC6A /* Resources */,
@@ -156,7 +158,7 @@
 				TargetAttributes = {
 					17CBF3911FB4B2E00015BC6A = {
 						CreatedOnToolsVersion = 9.1;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -184,7 +186,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1700510021546E35008B16B6 /* awsconfiguration.json in Resources */,
+				FA6C86CE235764C70023397A /* awsconfiguration.json in Resources */,
 				17CBF3A01FB4B2E00015BC6A /* LaunchScreen.storyboard in Resources */,
 				17CBF39D1FB4B2E00015BC6A /* Assets.xcassets in Resources */,
 				17CBF39B1FB4B2E00015BC6A /* Main.storyboard in Resources */,
@@ -235,6 +237,42 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		FA6C86CF235766D50023397A /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"\n";
+		};
+		FA6C86D02357672D0023397A /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftFormat;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat\" \"${SRCROOT}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -329,6 +367,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -380,6 +419,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -392,11 +432,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = W3DRXD72QU;
 				INFOPLIST_FILE = EventsApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amazonaws.EventsApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -409,11 +448,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = W3DRXD72QU;
 				INFOPLIST_FILE = EventsApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amazonaws.EventsApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
