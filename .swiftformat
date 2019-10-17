@@ -1,0 +1,118 @@
+# file options
+--exclude Pods
+--exclude EventsApp/EventsAPI.swift
+
+# rules with format options
+
+--enable braces
+  --allman false
+
+--enable elseOnSameLine
+  --elseposition same-line
+
+--enable fileHeader
+  --header ignore
+
+--enable hoistPatternLet
+  --patternlet inline
+
+--enable indent
+  --ifdef outdent
+  --indent 4
+  --indentcase false
+  --xcodeindentation enabled
+
+--enable linebreaks
+  --linebreaks lf
+
+--enable numberFormatting
+  --binarygrouping none
+  --decimalgrouping 3
+  --exponentcase lowercase
+  --exponentgrouping enabled
+  --fractiongrouping enabled
+  --hexgrouping none
+  --hexliteralcase lowercase
+  --octalgrouping none
+
+--enable ranges
+  --ranges spaced
+
+--enable redundantSelf
+  --self init-only
+  --selfrequired 
+
+--enable semicolons
+  --semicolons never
+
+--enable sortedImports
+  --importgrouping testable-bottom
+
+--enable spaceAroundOperators
+  --operatorfunc spaced
+
+--enable trailingClosures
+  --trailingclosures 
+
+--enable trailingCommas
+  --commas inline
+
+--enable trailingSpace
+  --trimwhitespace always
+
+--enable unusedArguments
+  --stripunusedargs closure-only
+
+--enable void
+  --empty void
+
+--enable wrapArguments
+  --closingparen same-line
+  --wraparguments after-first
+  --wrapcollections before-first
+
+# standalone rules
+--enable andOperator
+--enable anyObjectProtocol
+--enable blankLinesAroundMark
+--enable blankLinesAtEndOfScope
+--enable blankLinesAtStartOfScope
+--enable blankLinesBetweenScopes
+--enable consecutiveBlankLines
+--enable consecutiveSpaces
+--enable duplicateImports
+--enable emptyBraces
+--enable isEmpty
+--enable leadingDelimiters
+--enable linebreakAtEndOfFile
+--enable redundantBackticks
+--enable redundantBreak
+--enable redundantExtensionACL
+--enable redundantFileprivate
+--enable redundantGet
+--enable redundantInit
+--enable redundantLet
+--enable redundantLetError
+--enable redundantNilInit
+--enable redundantObjc
+--enable redundantParens
+--enable redundantPattern
+--enable redundantRawValues
+--enable redundantReturn
+--enable redundantVoidReturnType
+--enable spaceAroundBraces
+--enable spaceAroundBrackets
+--enable spaceAroundComments
+--enable spaceAroundGenerics
+--enable spaceAroundParens
+--enable spaceInsideBraces
+--enable spaceInsideBrackets
+--enable spaceInsideComments
+--enable spaceInsideGenerics
+--enable spaceInsideParens
+--enable specifiers
+--enable strongOutlets
+--enable strongifiedSelf
+--enable todos
+--enable typeSugar
+--enable yodaConditions

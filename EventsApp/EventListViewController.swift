@@ -3,14 +3,14 @@
 //  EventsApp
 //
 
-import UIKit
 import AWSAppSync
+import UIKit
 
 class EventCell: UITableViewCell {
-    @IBOutlet weak var eventNameLabel: UILabel!
-    @IBOutlet weak var whenLabel: UILabel!
-    @IBOutlet weak var whereLabel: UILabel!
-    
+    @IBOutlet var eventNameLabel: UILabel!
+    @IBOutlet var whenLabel: UILabel!
+    @IBOutlet var whereLabel: UILabel!
+
     func updateValues(eventName: String?, when: String?, where: String?) {
         eventNameLabel.text = eventName
         whenLabel.text = when
@@ -19,10 +19,9 @@ class EventCell: UITableViewCell {
 }
 
 class EventListViewController: UIViewController {
-    
     // MARK: - IBOutlets
-    
-    @IBOutlet weak var tableView: UITableView!
+
+    @IBOutlet var tableView: UITableView!
 
     // MARK: - Variables
 
@@ -30,32 +29,32 @@ class EventListViewController: UIViewController {
 
     var nextToken: String?
     var fixedLimit: Int = 20 // predefined pagination size
-    
+
     var isLoadInProgress: Bool = false
     var needUpdateList: Bool = false
     var lastOpenedIndex: Int = -1
 
     var eventList: [ListEventsQuery.Data.ListEvent.Item?] = []
-    
+
     lazy var refreshControl: UIRefreshControl = {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self,
                                  action: #selector(handleRefresh(_:)),
                                  for: .valueChanged)
-        
+
         return refreshControl
     }()
-    
+
     @objc func handleRefresh(_ refreshControl: UIRefreshControl) {
         nextToken = nil
         fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
     }
-    
+
     // MARK: - Controller delegates
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
         // update list only if data source is changed programmatically
         if needUpdateList {
             needUpdateList = false
@@ -66,10 +65,11 @@ class EventListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        self.automaticallyAdjustsScrollViewInsets = false
 
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+
         appSyncClient = appDelegate.appSyncClient
 
         tableView.dataSource = self
@@ -81,10 +81,10 @@ class EventListViewController: UIViewController {
                                                             style: .plain,
                                                             target: self,
                                                             action: #selector(addTapped))
-        
+
         fetchAllEventsUsingCachePolicy(.returnCacheDataAndFetch)
     }
-    
+
     // MARK: - Queries
 
     func fetchAllEventsUsingCachePolicy(_ cachePolicy: CachePolicy) {
@@ -98,7 +98,7 @@ class EventListViewController: UIViewController {
 
         let listQuery = ListEventsQuery(limit: fixedLimit, nextToken: nextToken)
 
-        appSyncClient?.fetch(query: listQuery, cachePolicy: cachePolicy) { (result, error) in
+        appSyncClient?.fetch(query: listQuery, cachePolicy: cachePolicy) { result, error in
             self.refreshControl.endRefreshing()
 
             if let error = error {
@@ -107,7 +107,7 @@ class EventListViewController: UIViewController {
             }
 
             // Remove existing records if we're either loading from cache, or loading fresh (e.g., from a refresh)
-            if self.nextToken == nil && cachePolicy == .returnCacheDataAndFetch {
+            if self.nextToken == nil, cachePolicy == .returnCacheDataAndFetch {
                 self.eventList.removeAll()
             }
 
@@ -130,60 +130,68 @@ class EventListViewController: UIViewController {
     }
 
     // MARK: - Click handlers
-    
+
     @objc func addTapped() {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "AddEventViewController")
-        
-        self.navigationController?.pushViewController(vc, animated: true)
+        let addEventViewController = storyboard.instantiateViewController(withIdentifier: "AddEventViewController")
+
+        navigationController?.pushViewController(addEventViewController, animated: true)
     }
 }
 
 // MARK: - Table view delegates
 
 extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return eventList.count
+        eventList.count
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as! EventCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as? EventCell else {
+            return UITableViewCell()
+        }
+
         guard let event = eventList[indexPath.row] else {
             return cell
         }
+
         cell.updateValues(eventName: event.name, when: event.when, where: event.where)
+
         return cell
     }
-    
+
     // editing check
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return true
+        true
     }
-    
+
     // editing action
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if (editingStyle == UITableViewCell.EditingStyle.delete) {
-            guard let id = eventList[indexPath.row]?.id else {
+    func tableView(_ tableView: UITableView,
+                   commit editingStyle: UITableViewCell.EditingStyle,
+                   forRowAt indexPath: IndexPath) {
+        if editingStyle == UITableViewCell.EditingStyle.delete {
+            guard let eventId = eventList[indexPath.row]?.id else {
                 return
             }
-            let deleteEventMutation = DeleteEventMutation(id: id)
+            let deleteEventMutation = DeleteEventMutation(id: eventId)
 
-            appSyncClient?.perform(mutation: deleteEventMutation, optimisticUpdate: { (transaction) in
+            let optimisticUpdate: OptimisticResponseBlock = { transaction in
                 do {
                     // Update our normalized local store immediately for a responsive UI.
                     try transaction?.update(query: ListEventsQuery()) { (data: inout ListEventsQuery.Data) in
                         // remove event from local cache.
-                        let newState = data.listEvents?.items?.filter({$0?.id != id })
+                        let newState = data.listEvents?.items?.filter { $0?.id != eventId }
                         data.listEvents?.items = newState
                     }
                 } catch {
                     print("Error removing the object from cache with optimistic response.")
                 }
-            }) { result, error in
+            }
+
+            appSyncClient?.perform(mutation: deleteEventMutation, optimisticUpdate: optimisticUpdate) { result, error in
                 if let result = result {
                     print("Successful response for delete: \(result)")
-                    
+
                     // refresh updated list in main thread
                     self.eventList.remove(at: indexPath.row)
                     self.tableView.reloadData()
@@ -193,25 +201,28 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
             }
         }
     }
-    
+
     // click handlers
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.lastOpenedIndex = indexPath.row
-        
+        lastOpenedIndex = indexPath.row
+
         guard let event = eventList[indexPath.row] else {
             return
         }
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let controller = storyboard.instantiateViewController(withIdentifier: "EventDetailsViewController") as! EventDetailsViewController
+        guard let controller = storyboard.instantiateViewController(withIdentifier: "EventDetailsViewController")
+            as? EventDetailsViewController else {
+                return
+        }
         controller.event = event.fragments.event
-        self.navigationController?.pushViewController(controller, animated: true)
+        navigationController?.pushViewController(controller, animated: true)
     }
-    
+
     // pagination
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if !isLoadInProgress &&
-            indexPath.row > eventList.count - 2 &&
-            self.nextToken?.count ?? 0 > 0 {
+        if !isLoadInProgress,
+            indexPath.row > eventList.count - 2,
+            nextToken?.count ?? 0 > 0 {
             fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
         }
     }
