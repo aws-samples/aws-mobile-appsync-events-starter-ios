@@ -75,7 +75,7 @@ class EventDetailsViewController: UIViewController {
         }
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_: Bool) {
         super.viewWillDisappear(true)
         print("Cancelling subscription")
         newCommentsSubscriptionWatcher?.cancel()
@@ -93,8 +93,10 @@ class EventDetailsViewController: UIViewController {
             return
         }
 
+        // swiftlint:disable opening_brace
         if let eventListViewController = navigationController?.viewControllers[controllersCount - 2]
-            as? EventListViewController {
+            as? EventListViewController
+        {
             eventListViewController.eventList[eventListViewController.lastOpenedIndex]?.fragments.event = event
         }
     }
@@ -263,14 +265,15 @@ class EventDetailsViewController: UIViewController {
 // MARK: - Table view delegates
 
 extension EventDetailsViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
         comments.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath)
-            as? CommentCell else {
-                return UITableViewCell()
+            as? CommentCell
+        else {
+            return UITableViewCell()
         }
 
         guard let content = comments[indexPath.row]?.content else {

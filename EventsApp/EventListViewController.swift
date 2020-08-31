@@ -45,7 +45,7 @@ class EventListViewController: UIViewController {
         return refreshControl
     }()
 
-    @objc func handleRefresh(_ refreshControl: UIRefreshControl) {
+    @objc func handleRefresh(_: UIRefreshControl) {
         nextToken = nil
         fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
     }
@@ -142,7 +142,7 @@ class EventListViewController: UIViewController {
 // MARK: - Table view delegates
 
 extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
         eventList.count
     }
 
@@ -161,14 +161,16 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     }
 
     // editing check
-    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+    func tableView(_: UITableView, canEditRowAt _: IndexPath) -> Bool {
         true
     }
 
     // editing action
-    func tableView(_ tableView: UITableView,
+    // swiftlint:disable opening_brace
+    func tableView(_: UITableView,
                    commit editingStyle: UITableViewCell.EditingStyle,
-                   forRowAt indexPath: IndexPath) {
+                   forRowAt indexPath: IndexPath)
+    {
         if editingStyle == UITableViewCell.EditingStyle.delete {
             guard let eventId = eventList[indexPath.row]?.id else {
                 return
@@ -203,7 +205,7 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
     }
 
     // click handlers
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_: UITableView, didSelectRowAt indexPath: IndexPath) {
         lastOpenedIndex = indexPath.row
 
         guard let event = eventList[indexPath.row] else {
@@ -211,18 +213,21 @@ extension EventListViewController: UITableViewDataSource, UITableViewDelegate {
         }
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         guard let controller = storyboard.instantiateViewController(withIdentifier: "EventDetailsViewController")
-            as? EventDetailsViewController else {
-                return
+            as? EventDetailsViewController
+        else {
+            return
         }
         controller.event = event.fragments.event
         navigationController?.pushViewController(controller, animated: true)
     }
 
     // pagination
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    func tableView(_: UITableView, willDisplay _: UITableViewCell, forRowAt indexPath: IndexPath) {
+        // swiftlint:disable opening_brace
         if !isLoadInProgress,
             indexPath.row > eventList.count - 2,
-            nextToken?.count ?? 0 > 0 {
+            nextToken?.count ?? 0 > 0
+        {
             fetchAllEventsUsingCachePolicy(.fetchIgnoringCacheData)
         }
     }

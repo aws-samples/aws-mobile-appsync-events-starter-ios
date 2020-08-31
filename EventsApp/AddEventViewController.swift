@@ -36,20 +36,21 @@ class AddEventViewController: UIViewController {
 
     // MARK: - Click handlers
 
-    @IBAction func addNewPost(_ sender: Any) {
+    @IBAction func addNewPost(_: Any) {
         guard let nameText = nameInput.text, !nameText.isEmpty,
             let whenText = whenInput.text, !whenText.isEmpty,
             let whereText = whereInput.text, !whereText.isEmpty,
-            let descriptionText = descriptionInput.text, !descriptionText.isEmpty else {
-                // Server won't accept empty strings
-                let alertController = UIAlertController(title: "Error",
-                                                        message: "Missing values.",
-                                                        preferredStyle: .alert)
-                let okAction = UIAlertAction(title: "OK", style: .default)
-                alertController.addAction(okAction)
-                present(alertController, animated: true)
+            let descriptionText = descriptionInput.text, !descriptionText.isEmpty
+        else {
+            // Server won't accept empty strings
+            let alertController = UIAlertController(title: "Error",
+                                                    message: "Missing values.",
+                                                    preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "OK", style: .default)
+            alertController.addAction(okAction)
+            present(alertController, animated: true)
 
-                return
+            return
         }
 
         // We set up a temporary ID so we can reconcile the server-provided ID when `addEventMutation` returns
@@ -82,8 +83,10 @@ class AddEventViewController: UIViewController {
             defer {
                 self.navigationController?.popViewController(animated: true)
 
+                // swiftlint:disable opening_brace
                 if let eventListViewController =
-                    self.navigationController?.viewControllers.last as? EventListViewController {
+                    self.navigationController?.viewControllers.last as? EventListViewController
+                {
                     eventListViewController.needUpdateList = true
                 }
             }
@@ -129,7 +132,7 @@ class AddEventViewController: UIViewController {
         }
     }
 
-    @IBAction func onCancel(_ sender: Any) {
+    @IBAction func onCancel(_: Any) {
         dismiss(animated: true, completion: nil)
     }
 }
